@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto Tag Generator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 800px;
+            padding: 40px;
+            transition: all 0.3s ease;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            color: #333;
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #6a11cb, #2575fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+        
+        .input-group {
+            display: flex;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border-radius: 50px;
+            overflow: hidden;
+        }
+        
+        .input-field {
+            flex: 1;
+            padding: 18px 25px;
+            border: none;
+            font-size: 1.1rem;
+            outline: none;
+            background: #f8f9fa;
+        }
+        
+        .generate-btn {
+            background: linear-gradient(45deg, #6a11cb, #2575fc);
+            color: white;
+            border: none;
+            padding: 18px 30px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .generate-btn:hover {
+            background: linear-gradient(45deg, #5a0dbb, #1d65eb);
+            transform: translateY(-2px);
+        }
+        
+        .generate-btn:active {
+            transform: translateY(0);
+        }
+        
+        .results-container {
+            margin-top: 30px;
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .results-header h2 {
+            color: #333;
+            font-size: 1.6rem;
+        }
+        
+        .copy-all-btn {
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            color: #333;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .copy-all-btn:hover {
+            background: #e0e0e0;
+        }
+        
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        
+        .tag {
+            background: linear-gradient(45deg, #6a11cb, #2575fc);
+            color: white;
+            padding: 10px 18px;
+            border-radius: 30px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .tag:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .tag i {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 1rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .toast.show {
+            opacity: 1;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 25px;
+            }
+            
+            .header h1 {
+                font-size: 2.2rem;
+            }
+            
+            .input-group {
+                flex-direction: column;
+                border-radius: 15px;
+            }
+            
+            .generate-btn {
+                border-radius: 0 0 15px 15px;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Auto Tag Generator</h1>
+            <p>Generate relevant social media tags based on your keyword</p>
+        </div>
+        
+        <div class="input-group">
+            <input type="text" class="input-field" id="keywordInput" placeholder="Enter a keyword (e.g., travel, food, fashion)">
+            <button class="generate-btn" id="generateBtn">
+                <span>Generate Tags</span>
+                <i class="fas fa-magic"></i>
+            </button>
+        </div>
+        
+        <div class="results-container" id="resultsContainer">
+            <div class="results-header">
+                <h2>Generated Tags</h2>
+                <button class="copy-all-btn" id="copyAllBtn">
+                    <i class="fas fa-copy"></i>
+                    <span>Copy All</span>
+                </button>
+            </div>
+            <div class="tags-container" id="tagsContainer">
+                <!-- Tags will be inserted here -->
+            </div>
+        </div>
+    </div>
+    
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // Mock database of popular tags by category
+        const tagDatabase = {
+            travel: [
+                { tag: "wanderlust", popularity: 95 },
+                { tag: "travelgram", popularity: 92 },
+                { tag: "exploremore", popularity: 89 },
+                { tag: "travelphotography", popularity: 94 },
+                { tag: "instatravel", popularity: 91 },
+                { tag: "adventure", popularity: 87 },
+                { tag: "traveling", popularity: 85 },
+                { tag: "vacation", popularity: 88 },
+                { tag: "trip", popularity: 84 },
+                { tag: "journey", popularity: 83 }
+            ],
+            food: [
+                { tag: "foodie", popularity: 98 },
+                { tag: "foodporn", popularity: 96 },
+                { tag: "instafood", popularity: 94 },
+                { tag: "yummy", popularity: 92 },
+                { tag: "delicious", popularity: 90 },
+                { tag: "foodphotography", popularity: 89 },
+                { tag: "foodgasm", popularity: 88 },
+                { tag: "eating", popularity: 85 },
+                { tag: "tasty", popularity: 87 },
+                { tag: "homemade", popularity: 84 }
+            ],
+            fashion: [
+                { tag: "fashion", popularity: 99 },
+                { tag: "style", popularity: 97 },
+                { tag: "outfit", popularity: 95 },
+                { tag: "fashionblogger", popularity: 93 },
+                { tag: "instafashion", popularity: 91 },
+                { tag: "fashionista", popularity: 90 },
+                { tag: "streetstyle", popularity: 89 },
+                { tag: "lookbook", popularity: 87 },
+                { tag: "fashionstyle", popularity: 86 },
+                { tag: "fashiondaily", popularity: 85 }
+            ],
+            fitness: [
+                { tag: "fitness", popularity: 97 },
+                { tag: "workout", popularity: 95 },
+                { tag: "gym", popularity: 94 },
+                { tag: "health", popularity: 93 },
+                { tag: "fit", popularity: 92 },
+                { tag: "motivation", popularity: 90 },
+                { tag: "training", popularity: 89 },
+                { tag: "healthy", popularity: 88 },
+                { tag: "lifestyle", popularity: 87 },
+                { tag: "exercise", popularity: 86 }
+            ],
+            photography: [
+                { tag: "photography", popularity: 99 },
+                { tag: "photo", popularity: 97 },
+                { tag: "photooftheday", popularity: 96 },
+                { tag: "picoftheday", popularity: 94 },
+                { tag: "instaphoto", popularity: 92 },
+                { tag: "photographer", popularity: 90 },
+                { tag: "photoshoot", popularity: 89 },
+                { tag: "photoart", popularity: 87 },
+                { tag: "photographylovers", popularity: 86 },
+                { tag: "photoofday", popularity: 85 }
+            ]
+        };
+
+        // General popular tags that work with most categories
+        const generalTags = [
+            { tag: "instagood", popularity: 99 },
+            { tag: "love", popularity: 98 },
+            { tag: "beautiful", popularity: 97 },
+            { tag: "happy", popularity: 96 },
+            { tag: "cute", popularity: 95 },
+            { tag: "follow", popularity: 94 },
+            { tag: "like4like", popularity: 93 },
+            { tag: "followme", popularity: 92 },
+            { tag: "tbt", popularity: 91 },
+            { tag: "picoftheday", popularity: 90 }
+        ];
+
+        // DOM elements
+        const keywordInput = document.getElementById('keywordInput');
+        const generateBtn = document.getElementById('generateBtn');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const tagsContainer = document.getElementById('tagsContainer');
+        const copyAllBtn = document.getElementById('copyAllBtn');
+        const toast = document.getElementById('toast');
+
+        // Generate tags function
+        function generateTags() {
+            const keyword = keywordInput.value.trim().toLowerCase();
+            
+            if (!keyword) {
+                showToast("Please enter a keyword");
+                return;
+            }
+
+            // Show loading state
+            generateBtn.innerHTML = '<div class="loading"></div>';
+            generateBtn.disabled = true;
+
+            // Simulate API call delay
+            setTimeout(() => {
+                let relevantTags = [];
+                
+                // Check if keyword exists in our database
+                if (tagDatabase[keyword]) {
+                    relevantTags = [...tagDatabase[keyword]];
+                } else {
+                    // Try to find partial matches
+                    for (const category in tagDatabase) {
+                        if (category.includes(keyword) || keyword.includes(category)) {
+                            relevantTags = [...tagDatabase[category]];
+                            break;
+                        }
+                    }
+                }
+                
+                // If no specific tags found, use general tags
+                if (relevantTags.length === 0) {
+                    relevantTags = [...generalTags];
+                }
+                
+                // Add some general tags to the results
+                relevantTags = relevantTags.concat(generalTags.slice(0, 3));
+                
+                // Remove duplicates and sort by popularity
+                const uniqueTags = Array.from(
+                    new Map(relevantTags.map(item => [item.tag, item])).values()
+                );
+                
+                uniqueTags.sort((a, b) => b.popularity - a.popularity);
+                
+                // Display tags
+                displayTags(uniqueTags.slice(0, 15));
+                
+                // Reset button
+                generateBtn.innerHTML = '<span>Generate Tags</span><i class="fas fa-magic"></i>';
+                generateBtn.disabled = false;
+            }, 800);
+        }
+
+        // Display tags in the UI
+        function displayTags(tags) {
+            tagsContainer.innerHTML = '';
+            
+            tags.forEach(tagObj => {
+                const tagElement = document.createElement('div');
+                tagElement.className = 'tag';
+                tagElement.innerHTML = `
+                    #${tagObj.tag}
+                    <i class="fas fa-copy"></i>
+                `;
+                
+                tagElement.addEventListener('click', () => {
+                    copyToClipboard(`#${tagObj.tag}`);
+                    showToast(`Copied #${tagObj.tag}`);
+                });
+                
+                tagsContainer.appendChild(tagElement);
+            });
+            
+            resultsContainer.style.display = 'block';
+        }
+
+        // Copy all tags to clipboard
+        copyAllBtn.addEventListener('click', () => {
+            const tags = Array.from(tagsContainer.children).map(tag => 
+                tag.textContent.trim()
+            );
+            
+            copyToClipboard(tags.join(' '));
+            showToast('Copied all tags!');
+        });
+
+        // Copy text to clipboard
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text)
+                .catch(err => {
+                    console.error('Failed to copy: ', err);
+                    showToast('Failed to copy');
+                });
+        }
+
+        // Show toast notification
+        function showToast(message) {
+            toast.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+
+        // Event listeners
+        generateBtn.addEventListener('click', generateTags);
+        
+        keywordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                generateTags();
+            }
+        });
+    </script>
+</body>
+</html>
